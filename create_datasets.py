@@ -20,6 +20,8 @@ def smiles_to_graph(smiles: str):
         #bond_type = molecule.GetBondBetweenAtoms(idx, neighbor_idx).GetBondType()
         values.append(1)
     adjacent = tf.sparse.reorder(tf.sparse.SparseTensor(indices = indices, values = values, dense_shape = (atom_num, atom_num)))
+    row_sum = tf.sparse.reduce_sum(adjacent, axis = -1, keepdims = True) # row_sum.shape = (atom_num, 1)
+    adjacent = adjacent / row_sum # normalization
     annotations = tf.stack(annotations) # annotations.shape = (atom_num, annotation_dim)
     return adjacent, annotations
 
