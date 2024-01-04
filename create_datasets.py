@@ -1,21 +1,25 @@
 #!/usr/bin/python3
 
 from rdkit import Chem
-from mordred import Calculator, descriptors
-import numpy as np
+import tensorflow as tf
 
-class Smiles2Feature(object):
-  def __init__(self,):
-    self.calc = Calculator(descriptors, ignore_3D = False)
-  def extract(self, smiles: str):
+def smiles_to_graph(smiles: str):
     molecule = Chem.MolFromSmiles(smiles)
-    feature = self.calc(molecule)
-    print('---------------------', feature[0])
-    feature = np.array([f for f in feature]).astype(np.float32)
-    return feature
+    atom_num = len(molecule.GetAtoms())
+    annotations = list()
+    indices = list()
+    values = list()
+    for atom in molecule.GetAtoms():
+      idx = atom.GetIdx()
+      annotation = tf.one_hot(idx, atom_num) * atom.GetAtomicNum()
+      annotations.append(annotation)
+      for neighbor_atom in atom.GetNeighbors():
+        neighbor_idx = neighbor_atom.GetIdx()
+        indices.append((idx, neighbor_idx))
+        values.append(1)
+    adjacent = tf.sparse.reorder(tf.sparse.SparseTensor(indices = indices, values = values, dense_shape = (atom_num, atom_num)))
+    annotations = tf.stack(annotations) # annotations.shape = (atom_num, annotation_dim)
+    return adjacent, annotations
 
 if __name__ == "__main__":
-  extractor = Smiles2Feature()
-  feature1 = extractor.extract('c1ccccc1Cl'); print(feature1)
-  feature2 = extractor.extract('c1ccccc1O'); print(feature2)
-  feature3 = extractor.extract('c1ccccc1N'); print(feature3)
+  adjacent, annotations = smiles_to_graph('c1ccccc1Cl'); print(tf.sparse.to_dense(adjacent), annotations)
