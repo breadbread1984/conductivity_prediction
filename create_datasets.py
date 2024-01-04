@@ -16,6 +16,8 @@ def smiles_to_graph(smiles: str):
       for neighbor_atom in atom.GetNeighbors():
         neighbor_idx = neighbor_atom.GetIdx()
         indices.append((idx, neighbor_idx))
+        # FIXME: bond type is not shown in adjacent matrix
+        #bond_type = molecule.GetBondBetweenAtoms(idx, neighbor_idx).GetBondType()
         values.append(1)
     adjacent = tf.sparse.reorder(tf.sparse.SparseTensor(indices = indices, values = values, dense_shape = (atom_num, atom_num)))
     annotations = tf.stack(annotations) # annotations.shape = (atom_num, annotation_dim)
