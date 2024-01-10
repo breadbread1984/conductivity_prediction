@@ -58,6 +58,10 @@ class Dataset(object):
       writer.write(trainsample.SerializeToString())
     writer.close()
 
+def main(unused_argv):
+  dataset = Dataset()
+  dataset.generate_dataset(FLAGS.input_csv, FLAGS.output_tfrecord)
+
 if __name__ == "__main__":
   add_options()
   app.run(main)
