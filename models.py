@@ -6,7 +6,7 @@ class GraphConvolution(tf.keras.layers.Layer):
   def __init__(self, **kwargs):
     super(GraphConvolution, self).__init__(**kwargs)
   def build(self, input_shape):
-    self.bias = self.add_weight(name = 'bias', shape = (1,1,input_shape[1][-1],), initializer = tf.keras.initializers.GlorotUniform(), trainable = True)
+    self.bias = self.add_weight(name = 'bias', shape = (1,1,input_shape[1][-1]), initializer = tf.keras.initializers.GlorotUniform(), trainable = True)
   def call(self, inputs):
     # adjacent.shape = (batch, atom_num, atom_num)
     # annotations.shape = (batch, atom_num, in_channel)
@@ -21,15 +21,27 @@ class GraphConvolution(tf.keras.layers.Layer):
     results = results + self.bias
     return results
 
-def GatedGraphConvolution(atom_num, in_channel, out_channel):
-  adjacent = tf.keras.Input((atom_num, atom_num), sparse = True)
-  annotations = tf.keras.Input((atom_num, in_channel))
-  results = GraphConvolution()([adjacent, annotations]) # results.shape = (batch, atom_num, in_channel)
-  results = tf.keras.layers.GRU(out_channel)(results)
+class GatedGraphConvolution(tf.keras.Model):
+  def __init__(self, atom_num, in_channel,**kwargs):
+    super(GatedGraphConvolution, self).__init__(**kwargs)
+    self.gc = GraphConvolution()
+    self.gru = tf.keras.layers.GRU(in_channel)
+    self.atom_num = atom_num
+    self.in_channel = in_channel
+  def call(self, adjacent, annotations):
+    results = self.gc([adjacent, annotations])
+    hidden_states = tf.reshape(annotations, (-1, self.in_channel)) # hidden_states.shape = (batch * atom_num, in_channel)
+    visible_states = tf.reshape(results, (-1, 1, self.in_channel)) # visible_states.shape = (batch * atom_num, 1, in_channel)
+    results = self.gru(visible_states, initial_state = hidden_states) # results.shape = (batch * atom_num, in_channel)
+    results = tf.reshape(results, (-1, self.atom_num, self.in_channel)) # results.shape = (batch, atom_num, in_channel)
+    return results
 
 if __name__ == "__main__":
   gc = GraphConvolution()
   adjacent = tf.sparse.expand_dims(tf.sparse.eye(10, 10), axis = 0)
   annotations = tf.random.normal(shape = (1,10,100))
   results = gc([adjacent, annotations])
+  print(results.shape)
+  ggc = GatedGraphConvolution(10,100)
+  results = ggc(adjacent, annotations)
   print(results.shape)
