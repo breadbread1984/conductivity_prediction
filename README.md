@@ -24,3 +24,7 @@ python3 create_dataset.py --input_csv <path/to/PI1M.csv> --output_tfrecord <path
 ```
 
 ## train feature extractor
+
+```shell
+python3 transfer_learning.py --dataset <path/to/tfrecord/file> --ckpt <path/to/place/ckpt>
+```
