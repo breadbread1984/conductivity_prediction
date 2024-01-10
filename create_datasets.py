@@ -11,8 +11,7 @@ def smiles_to_graph(smiles: str):
     values = list()
     for atom in molecule.GetAtoms():
       idx = atom.GetIdx()
-      annotation = tf.one_hot(idx, atom_num) * atom.GetAtomicNum()
-      annotations.append(annotation)
+      annotations.append(atom.GetAtomicNum())
       for neighbor_atom in atom.GetNeighbors():
         neighbor_idx = neighbor_atom.GetIdx()
         indices.append((idx, neighbor_idx))
@@ -22,7 +21,7 @@ def smiles_to_graph(smiles: str):
     adjacent = tf.sparse.reorder(tf.sparse.SparseTensor(indices = indices, values = values, dense_shape = (atom_num, atom_num)))
     row_sum = tf.sparse.reduce_sum(adjacent, axis = -1, keepdims = True) # row_sum.shape = (atom_num, 1)
     adjacent = adjacent / row_sum # normalization
-    annotations = tf.stack(annotations) # annotations.shape = (atom_num, annotation_dim)
+    annotations = tf.stack(annotations) # annotations.shape = (atom_num)
     return adjacent, annotations
 
 if __name__ == "__main__":
