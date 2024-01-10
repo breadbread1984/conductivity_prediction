@@ -22,35 +22,35 @@ class GraphConvolution(tf.keras.layers.Layer):
     return results
 
 class GatedGraphConvolution(tf.keras.Model):
-  def __init__(self, atom_num, in_channel, out_channel,**kwargs):
+  def __init__(self, atom_num, channels, **kwargs):
     super(GatedGraphConvolution, self).__init__(**kwargs)
     self.gc = GraphConvolution()
-    self.gru = tf.keras.layers.GRU(in_channel)
+    self.gru = tf.keras.layers.GRU(channels)
     self.atom_num = atom_num
-    self.in_channel = in_channel
-    self.out_channel = out_channel
+    self.channels = channels
   def call(self, adjacent, annotations):
-    results = self.gc([adjacent, annotations]) # results.shape = (batch, atom_num, in_channel)
-    hidden_states = tf.reshape(annotations, (-1, self.in_channel)) # hidden_states.shape = (batch * atom_num, in_channel)
-    visible_states = tf.reshape(results, (-1, 1, self.in_channel)) # visible_states.shape = (batch * atom_num, 1, in_channel)
-    results = self.gru(visible_states, initial_state = hidden_states) # results.shape = (batch * atom_num, in_channel)
-    results = tf.reshape(results, (-1, self.atom_num, self.in_channel)) # results.shape = (batch, atom_num, in_channel)
-    results = tf.keras.layers.Dense(self.out_channel, use_bias = True)(results) # results.shape = (batch, atom_num, out_channel)
+    results = self.gc([adjacent, annotations]) # results.shape = (batch, atom_num, channels)
+    hidden_states = tf.reshape(annotations, (-1, self.channels)) # hidden_states.shape = (batch * atom_num, channels)
+    visible_states = tf.reshape(results, (-1, 1, self.channels)) # visible_states.shape = (batch * atom_num, 1, channels)
+    results = self.gru(visible_states, initial_state = hidden_states) # results.shape = (batch * atom_num, channels)
+    results = tf.reshape(results, (-1, self.atom_num, self.channels)) # results.shape = (batch, atom_num, channels)
     return results
 
 class FeatureExtractor(tf.keras.Model):
-  def __init__(self, atom_num, in_channel, out_channel = 32, num_layers = 4, **kwargs):
+  def __init__(self, atom_num, channels = 32, num_layers = 4, **kwargs):
     super(FeatureExtractor, self).__init__(**kwargs)
-    self.ggnns = [GatedGraphConvolution(atom_num, in_channel if i == 0 else out_channel, out_channel) for i in range(num_layers)]
+    self.embed = tf.keras.layers.Embedding(118, channels)
+    self.ggnns = [GatedGraphConvolution(atom_num, channels) for i in range(num_layers)]
   def call(self, adjacent, annotations):
-    results = annotations
+    results = self.embed(annotations) # results.shape = (batch, atom_num, 32)
     for ggnn in self.ggnns:
       results = ggnn(adjacent, results)
     return results
 
 if __name__ == "__main__":
   adjacent = tf.sparse.expand_dims(tf.sparse.eye(10, 10), axis = 0)
-  annotations = tf.random.normal(shape = (1,10,100))
-  fe = FeatureExtractor(10,100,200)
+  annotations = tf.random.uniform(minval = 0, maxval = 118, shape = (1,10), dtype = tf.int32)
+  print(annotations)
+  fe = FeatureExtractor(10)
   results = fe(adjacent, annotations)
   print(results.shape)
