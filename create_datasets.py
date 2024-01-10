@@ -33,7 +33,7 @@ class Dataset(object):
     adjacent = tf.sparse.reorder(tf.sparse.SparseTensor(indices = indices, values = values, dense_shape = (atom_num, atom_num)))
     row_sum = tf.sparse.reduce_sum(adjacent, axis = -1, keepdims = True) # row_sum.shape = (atom_num, 1)
     adjacent = adjacent / row_sum # normalization
-    annotations = tf.stack(annotations) # annotations.shape = (atom_num)
+    annotations = tf.cast(tf.stack(annotations), dtype = tf.int32) # annotations.shape = (atom_num)
     return adjacent, annotations
   def smiles_to_fingerprint(self, smiles: str):
     molecule = Chem.MolFromSmiles(smiles)
@@ -52,11 +52,24 @@ class Dataset(object):
         feature = {
           'adjacent': tf.train.Feature(bytes_list = tf.train.ByteList(value = tf.io.serialize_sparse(adjacent).numpy())),
           'atoms': tf.train.Feature(bytes_list = tf.train.ByteList(value = tf.io.serialize_tensor(atoms).numpy())),
-          'feature': tf.train.Feature(bytes_list = tf.train.ByteList(value = tf.io.serialize_tensor(fingerprint).numpy()))
+          'feature': tf.train.Feature(bytes_list = tf.train.ByteList(value = tf.io.serialize_tensor(fingerprint).numpy())),
         }
       ))
       writer.write(trainsample.SerializeToString())
     writer.close()
+  def get_parse_function(self,):
+    def parse_function(serialized_example):
+      feature = tf.io.parse_single_example(
+        serialized_example,
+        features = {
+          'adjacent': tf.io.VarLenFeature(dtype = tf.float32),
+          'atoms': tf.io.VarLenFeature(dtype = tf.int32),
+          'feature': tf.io.FixedLenFeature(1613,), dtype = tf.float32),
+        })
+      adjacent = tf.io.deserialize_many_sparse(feature['adjacent'], dtype = tf.float32)
+      atoms = tf.io.parse_tensor(feature['atoms'], out_type = tf.int32)
+      feature = tf.io.parse_tensor(feature['feature'], out_type = tf.float32)
+      return (adjacent, atoms), feature
 
 def main(unused_argv):
   dataset = Dataset()
