@@ -22,25 +22,25 @@ class GraphConvolution(tf.keras.layers.Layer):
     return results
 
 class GatedGraphConvolution(tf.keras.Model):
-  def __init__(self, atom_num, channels, **kwargs):
+  def __init__(self, channels, **kwargs):
     super(GatedGraphConvolution, self).__init__(**kwargs)
     self.gc = GraphConvolution()
     self.gru = tf.keras.layers.GRU(channels)
-    self.atom_num = atom_num
     self.channels = channels
   def call(self, adjacent, annotations):
     results = self.gc([adjacent, annotations]) # results.shape = (batch, atom_num, channels)
+    shape = tf.shape(results)
     hidden_states = tf.reshape(annotations, (-1, self.channels)) # hidden_states.shape = (batch * atom_num, channels)
     visible_states = tf.reshape(results, (-1, 1, self.channels)) # visible_states.shape = (batch * atom_num, 1, channels)
     results = self.gru(visible_states, initial_state = hidden_states) # results.shape = (batch * atom_num, channels)
-    results = tf.reshape(results, (-1, self.atom_num, self.channels)) # results.shape = (batch, atom_num, channels)
+    results = tf.reshape(results, shape) # results.shape = (batch, atom_num, channels)
     return results
 
 class FeatureExtractor(tf.keras.Model):
-  def __init__(self, atom_num, channels = 32, num_layers = 4, **kwargs):
+  def __init__(self, channels = 32, num_layers = 4, **kwargs):
     super(FeatureExtractor, self).__init__(**kwargs)
     self.embed = tf.keras.layers.Embedding(118, channels)
-    self.ggnns = [GatedGraphConvolution(atom_num, channels) for i in range(num_layers)]
+    self.ggnns = [GatedGraphConvolution(channels) for i in range(num_layers)]
   def call(self, adjacent, annotations):
     results = self.embed(annotations) # results.shape = (batch, atom_num, 32)
     for ggnn in self.ggnns:
@@ -48,9 +48,9 @@ class FeatureExtractor(tf.keras.Model):
     return results
 
 class FingerPrint(tf.keras.Model):
-  def __init__(self, atom_num, channels = 32, num_layers = 4, **kwargs):
+  def __init__(self, channels = 32, num_layers = 4, **kwargs):
     super(FingerPrint, self).__init__(**kwargs)
-    self.fe = FeatureExtractor(atom_num, channels, num_layers, **kwargs)
+    self.fe = FeatureExtractor(channels, num_layers, **kwargs)
     self.dense1 = tf.keras.layers.Dense(100, use_bias = True, activation = tf.keras.activations.relu)
     self.dense2 = tf.keras.layers.Dense(2000, use_bias = False)
     self.dropout = tf.keras.layers.Dropout(rate = 0.1)
