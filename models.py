@@ -47,10 +47,27 @@ class FeatureExtractor(tf.keras.Model):
       results = ggnn(adjacent, results)
     return results
 
+class FingerPrint(tf.keras.Model):
+  def __init__(self, atom_num, channels = 32, num_layers = 4, **kwargs):
+    super(FingerPrint, self).__init__(**kwargs)
+    self.fe = FeatureExtractor(atom_num, channels, num_layers, **kwargs)
+    self.dense1 = tf.keras.layers.Dense(100, use_bias = True, activation = tf.keras.activations.relu)
+    self.dense2 = tf.keras.layers.Dense(2000, use_bias = False)
+    self.dropout = tf.keras.layers.Dropout(rate = 0.1)
+  def call(self, adjacent, annotations):
+    results = self.fe(adjacent, annotations)
+    results = self.dense1(results)
+    results = self.dense2(results)
+    results = self.dropout(results)
+    return results
+
 if __name__ == "__main__":
   adjacent = tf.sparse.expand_dims(tf.sparse.eye(10, 10), axis = 0)
   annotations = tf.random.uniform(minval = 0, maxval = 118, shape = (1,10), dtype = tf.int32)
   print(annotations)
   fe = FeatureExtractor(10)
   results = fe(adjacent, annotations)
+  print(results.shape)
+  fp = FingerPrint(10)
+  results = fp(adjacent, annotations)
   print(results.shape)
