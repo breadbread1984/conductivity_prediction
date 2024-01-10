@@ -1,8 +1,16 @@
 #!/usr/bin/python3
 
+from absl import flags, app
+from csv import reader
 from rdkit import Chem
 from mordred import Calculator, descriptors
 import tensorflow as tf
+
+FLAGS = flags.FLAGS
+
+def add_options():
+  FLAGS.DEFINE_string('input_csv', default = None, help = 'path to polymer dataset csv')
+  FLAGS.DEFINE_string('output_tfrecord', default = 'dataset.tfrecord', help = 'path to output tfrecord')
 
 class Dataset(object):
   def __init__(self):
@@ -30,11 +38,31 @@ class Dataset(object):
   def smiles_to_fingerprint(self, smiles: str):
     molecule = Chem.MolFromSmiles(smiles)
     feature = self.calc(molecule)
-    print([f for f in feature])
     feature = tf.constant([f for f in feature])
     return feature
+  def generate_dataset(self, csv_file, tfrecord_file):
+    writer = tf.io.TFRecordWriter(tfrecord_file)
+    csvreader = reader(csv_file, delimiter = ',')
+    next(csvreader)
+    for row in csvreader:
+      smiles = row[0]
+      adjacent, atoms = self.smiles_to_graph(smiles)
+      fingerprint = self.smiles_to_fingerprint(smiles)
+      trainsample = tf.train.Example(features = tf.train.Features(
+        feature = {
+          'adjacent': tf.train.Feature(bytes_list = tf.train.ByteList(value = tf.io.serialize_sparse(adjacent).numpy())),
+          'atoms': tf.train.Feature(bytes_list = tf.train.ByteList(value = tf.io.serialize_tensor(atoms).numpy())),
+          'feature': tf.train.Feature(bytes_list = tf.train.ByteList(value = tf.io.serialize_tensor(fingerprint).numpy()))
+        }
+      ))
+      writer.write(trainsample.SerializeToString())
+    writer.close()
 
 if __name__ == "__main__":
+  add_options()
+  app.run(main)
+  '''
   dataset = Dataset()
   adjacent, annotations = dataset.smiles_to_graph('c1ccccc1Cl'); print(tf.sparse.to_dense(adjacent), annotations)
   feature = dataset.smiles_to_fingerprint('c1ccccc1Cl'); print(feature)
+  '''
