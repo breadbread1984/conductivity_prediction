@@ -1,7 +1,8 @@
 #!/usr/bin/python3
 
 from absl import flags, app
-from os.path import join
+from os import mkdir
+from os.path import join, exists
 import tensorflow as tf
 from create_datasets import Dataset
 from models import FingerPrint
@@ -18,6 +19,7 @@ def add_options():
   flags.DEFINE_integer('ckpt_interval', default = 1000, help = 'steps for one ckpt')
 
 def main(unused_argv):
+  if not exists(FLAGS.ckpt): mkdir(FLAGS.ckpt)
   parse_func = Dataset().get_parse_function()
   dataset = tf.data.TFRecordDataset(FLAGS.dataset).repeat().map(parse_func).prefetch(50).shuffle(50).batch(1)
   dataset_iter = iter(dataset)
