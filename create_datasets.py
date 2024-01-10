@@ -70,6 +70,7 @@ class Dataset(object):
       atoms = tf.io.parse_tensor(feature['atoms'], out_type = tf.int32)
       feature = tf.io.parse_tensor(feature['feature'], out_type = tf.float32)
       return (adjacent, atoms), feature
+    return parse_function
 
 def main(unused_argv):
   dataset = Dataset()

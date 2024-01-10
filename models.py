@@ -52,7 +52,7 @@ class FingerPrint(tf.keras.Model):
     super(FingerPrint, self).__init__(**kwargs)
     self.fe = FeatureExtractor(channels, num_layers, **kwargs)
     self.dense1 = tf.keras.layers.Dense(100, use_bias = True, activation = tf.keras.activations.relu)
-    self.dense2 = tf.keras.layers.Dense(2000, use_bias = False)
+    self.dense2 = tf.keras.layers.Dense(1613, use_bias = False)
     self.dropout = tf.keras.layers.Dropout(rate = 0.1)
   def call(self, adjacent, annotations):
     results = self.fe(adjacent, annotations)
