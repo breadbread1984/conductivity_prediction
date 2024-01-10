@@ -29,7 +29,7 @@ class GatedGraphConvolution(tf.keras.Model):
     self.atom_num = atom_num
     self.in_channel = in_channel
   def call(self, adjacent, annotations):
-    results = self.gc([adjacent, annotations])
+    results = self.gc([adjacent, annotations]) # results.shape = (batch, atom_num, in_channel)
     hidden_states = tf.reshape(annotations, (-1, self.in_channel)) # hidden_states.shape = (batch * atom_num, in_channel)
     visible_states = tf.reshape(results, (-1, 1, self.in_channel)) # visible_states.shape = (batch * atom_num, 1, in_channel)
     results = self.gru(visible_states, initial_state = hidden_states) # results.shape = (batch * atom_num, in_channel)
@@ -37,11 +37,8 @@ class GatedGraphConvolution(tf.keras.Model):
     return results
 
 if __name__ == "__main__":
-  gc = GraphConvolution()
   adjacent = tf.sparse.expand_dims(tf.sparse.eye(10, 10), axis = 0)
   annotations = tf.random.normal(shape = (1,10,100))
-  results = gc([adjacent, annotations])
-  print(results.shape)
   ggc = GatedGraphConvolution(10,100)
   results = ggc(adjacent, annotations)
   print(results.shape)
