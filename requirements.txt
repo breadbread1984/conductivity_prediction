@@ -1,2 +1,4 @@
 rdkit
-
+mordred
+networkx==2.3
+numpy==1.20
