@@ -9,8 +9,8 @@ import tensorflow as tf
 FLAGS = flags.FLAGS
 
 def add_options():
-  FLAGS.DEFINE_string('input_csv', default = None, help = 'path to polymer dataset csv')
-  FLAGS.DEFINE_string('output_tfrecord', default = 'dataset.tfrecord', help = 'path to output tfrecord')
+  flags.DEFINE_string('input_csv', default = None, help = 'path to polymer dataset csv')
+  flags.DEFINE_string('output_tfrecord', default = 'dataset.tfrecord', help = 'path to output tfrecord')
 
 class Dataset(object):
   def __init__(self):
