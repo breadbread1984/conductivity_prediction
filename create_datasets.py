@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 
 from absl import flags, app
-from csv import reader
 from rdkit import Chem
 from mordred import Calculator, descriptors, error
 import tensorflow as tf
@@ -14,7 +13,7 @@ def add_options():
 
 class Dataset(object):
   def __init__(self):
-    self.calc = Calculator(descriptors, ignore_3D = True)
+    self.calc = Calculator(descriptors, ignore_3D = False)
   def smiles_to_graph(self, smiles: str):
     molecule = Chem.MolFromSmiles(smiles)
     atom_num = len(molecule.GetAtoms())
@@ -42,20 +41,21 @@ class Dataset(object):
     return feature
   def generate_dataset(self, csv_file, tfrecord_file):
     writer = tf.io.TFRecordWriter(tfrecord_file)
-    csvreader = reader(csv_file, delimiter = ',')
-    next(csvreader)
-    for row in csvreader:
-      smiles = row[0]
+    csv = open(FLAGS.input_csv, 'r')
+    for line, row in enumerate(csv.readlines()):
+      if line == 0: continue
+      smiles = row
       adjacent, atoms = self.smiles_to_graph(smiles)
       fingerprint = self.smiles_to_fingerprint(smiles)
       trainsample = tf.train.Example(features = tf.train.Features(
         feature = {
-          'adjacent': tf.train.Feature(bytes_list = tf.train.ByteList(value = tf.io.serialize_sparse(adjacent).numpy())),
-          'atoms': tf.train.Feature(bytes_list = tf.train.ByteList(value = tf.io.serialize_tensor(atoms).numpy())),
-          'feature': tf.train.Feature(bytes_list = tf.train.ByteList(value = tf.io.serialize_tensor(fingerprint).numpy())),
+          'adjacent': tf.train.Feature(bytes_list = tf.train.BytesList(value = tf.io.serialize_sparse(adjacent).numpy())),
+          'atoms': tf.train.Feature(bytes_list = tf.train.BytesList(value = tf.io.serialize_tensor(atoms).numpy())),
+          'feature': tf.train.Feature(bytes_list = tf.train.BytesList(value = tf.io.serialize_tensor(fingerprint).numpy())),
         }
       ))
       writer.write(trainsample.SerializeToString())
+    csv.close()
     writer.close()
   def get_parse_function(self,):
     def parse_function(serialized_example):
