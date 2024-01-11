@@ -38,7 +38,7 @@ class Dataset(object):
   def smiles_to_fingerprint(self, smiles: str):
     molecule = Chem.MolFromSmiles(smiles)
     feature = self.calc(molecule)
-    feature = tf.constant([f for f in feature])
+    feature = tf.constant([f for f in feature], dtype = tf.float32)
     return feature
   def generate_dataset(self, csv_file, tfrecord_file):
     writer = tf.io.TFRecordWriter(tfrecord_file)
