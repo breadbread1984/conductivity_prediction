@@ -50,8 +50,8 @@ class Dataset(object):
       trainsample = tf.train.Example(features = tf.train.Features(
         feature = {
           'adjacent': tf.train.Feature(bytes_list = tf.train.BytesList(value = tf.io.serialize_sparse(adjacent).numpy())),
-          'atoms': tf.train.Feature(bytes_list = tf.train.BytesList(value = tf.io.serialize_tensor(atoms).numpy())),
-          'feature': tf.train.Feature(bytes_list = tf.train.BytesList(value = tf.io.serialize_tensor(fingerprint).numpy())),
+          'atoms': tf.train.Feature(bytes_list = tf.train.BytesList(value = [tf.io.serialize_tensor(atoms).numpy()])),
+          'feature': tf.train.Feature(bytes_list = tf.train.BytesList(value = [tf.io.serialize_tensor(fingerprint).numpy()])),
         }
       ))
       writer.write(trainsample.SerializeToString())
