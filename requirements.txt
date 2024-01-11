@@ -2,3 +2,4 @@ rdkit==2023.9.3
 mordred==1.2.0
 networkx==2.8.4
 numpy==1.23.5
+nose-py3
