@@ -17,6 +17,14 @@ modred has a bug, please manual update /home/breadbread1984/envs/tf2/lib/python3
         for bcc in (self.G.subgraph(c) for c in networkx.biconnected_components(self.G)):
 ```
 
+verify your environment by executing the following command
+
+```shell
+python3 -m mordred.tests
+```
+
+if no errors occur, you can safely generated mordred descriptors.
+
 ## generate dataset
 
 ### download polymer dataset
