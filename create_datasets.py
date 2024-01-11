@@ -3,7 +3,7 @@
 from absl import flags, app
 from csv import reader
 from rdkit import Chem
-from mordred import Calculator, descriptors
+from mordred import Calculator, descriptors, error
 import tensorflow as tf
 
 FLAGS = flags.FLAGS
@@ -38,7 +38,7 @@ class Dataset(object):
   def smiles_to_fingerprint(self, smiles: str):
     molecule = Chem.MolFromSmiles(smiles)
     feature = self.calc(molecule)
-    feature = tf.constant([f for f in feature], dtype = tf.float32)
+    feature = tf.constant([f if type(f) is not error.Missing else -1 for f in feature], dtype = tf.float32)
     return feature
   def generate_dataset(self, csv_file, tfrecord_file):
     writer = tf.io.TFRecordWriter(tfrecord_file)
