@@ -4,3 +4,4 @@ networkx==2.8.4
 numpy==1.23.5
 nose-py3
 pandas
+pyyaml

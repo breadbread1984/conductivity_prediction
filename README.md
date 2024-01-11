@@ -6,10 +6,10 @@
 pip3 install -r requirements.txt
 ```
 
-if version of python is over 3.9 (included), please manually update np.int to np.int32 at
+if version of python is over 3.9 (included), please manually update from collection to collection.abc
 
-- /home/breadbread1984/envs/tf2/lib/python3.11/site-packages/networkx/readwrite/graphml.py:346
-- /home/breadbread1984/envs/tf2/lib/python3.11/site-packages/networkx/readwrite/gexf.py:220
+- /home/breadbread1984/envs/tf2/lib/python3.11/site-packages/mordred/tests/test_import_all_descriptors.py:1
+- /home/breadbread1984/envs/tf2/lib/python3.11/site-packages/mordred/tests/test_result_type.py:1
 
 ## generate dataset
 
