@@ -29,7 +29,7 @@ if no errors occur, you can safely generated mordred descriptors.
 
 ### download polymer dataset
 
-download the dataset from [PI1M](https://github.com/RUIMINMA1996/PI1M/tree/master) .
+download the dataset from [PI1M](https://github.com/RUIMINMA1996/PI1M) .
 
 ### generate tfrecord
 
