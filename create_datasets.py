@@ -62,9 +62,9 @@ class Dataset(object):
       feature = tf.io.parse_single_example(
         serialized_example,
         features = {
-          'adjacent': tf.io.VarLenFeature(dtype = tf.float32),
-          'atoms': tf.io.VarLenFeature(dtype = tf.int32),
-          'feature': tf.io.FixedLenFeature((1613,), dtype = tf.float32),
+          'adjacent': tf.io.FixedLenFeature((), dtype = tf.string),
+          'atoms': tf.io.FixedLenFeature((), dtype = tf.string),
+          'feature': tf.io.FixedLenFeature((), dtype = tf.string),
         })
       adjacent = tf.io.deserialize_many_sparse(feature['adjacent'], dtype = tf.float32)
       atoms = tf.io.parse_tensor(feature['atoms'], out_type = tf.int32)
