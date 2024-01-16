@@ -10,7 +10,7 @@ FLAGS = flags.FLAGS
 def add_options():
   flags.DEFINE_integer('num_training_points', default = 100, help = 'number of training points')
   flags.DEFINE_float('observation_var', default = .1, help = 'observation variance')
-  flags.DEFINE_integer('idx_dim', default = 1, help = 'dimension of index')
+  flags.DEFINE_integer('dim', default = 1, help = 'dimension of index')
   flags.DEFINE_float('learning_rate', default = .01, help = 'learning rate')
   flags.DEFINE_integer('iters', default = 1000, help = 'iteration')
 
