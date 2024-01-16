@@ -32,7 +32,7 @@ def main(unused_argv):
   gp_join_model = tfp.distributions.JointDistributionNamed({
     'amplitude': tfp.distributions.LogNormal(loc = 0., scale = np.float64(1.)),
     'length_scale': tfp.distributions.LogNormal(loc = 0., scale = np.float64(1.)),
-    'observation_noise_variance': tfp.distributions.LogNorm(loc = 0., scale = np.float64(1.)),
+    'observation_noise_variance': tfp.distributions.LogNormal(loc = 0., scale = np.float64(1.)),
     'observations': build_gp(obs_idx),
   })
   # train the joint distribution given the obervation
