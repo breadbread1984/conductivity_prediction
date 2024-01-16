@@ -4,7 +4,6 @@ from absl import flags, app
 import numpy as np
 import tensorflow as tf
 import tensorflow_probability as tfp
-import tensorflow_probability.math.psd_kernels as tfk
 
 FLAGS = flags.FLAGS
 
