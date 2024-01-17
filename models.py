@@ -41,10 +41,13 @@ class FeatureExtractor(tf.keras.Model):
     super(FeatureExtractor, self).__init__(**kwargs)
     self.embed = tf.keras.layers.Embedding(118, channels)
     self.ggnns = [GatedGraphConvolution(channels) for i in range(num_layers)]
+    self.pool = tf.keras.layers.Lambda(lambda x: tf.math.reduce_mean(x, axis = 1))
   def call(self, adjacent, annotations):
     results = self.embed(annotations) # results.shape = (batch, atom_num, 32)
     for ggnn in self.ggnns:
       results = ggnn(adjacent, results)
+    # graph pooling
+    results = self.pool(results) # results.shape = (batch, 32)
     return results
 
 class FingerPrint(tf.keras.Model):
