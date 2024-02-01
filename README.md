@@ -29,16 +29,19 @@ if no errors occur, you can safely generated mordred descriptors.
 
 ### download polymer dataset
 
-download the dataset from [PI1M](https://github.com/RUIMINMA1996/PI1M) .
+download the dataset from [bohrium](https://dataset-bohr-storage.dp.tech/lbg%2Fdataset%2Fzip%2Fdataset_tiefblue_bohr_14076_ai4scup-cns-5zkz_v101725.zip?Expires=1706793489&OSSAccessKeyId=LTAI5tGCcUT7wz9m1fq8cuLa&Signature=lJIRW1BiXYeKua7uGj293CT5WIo%3D) .
 
 ### generate tfrecord
 
 ```shell
-python3 create_dataset.py --input_csv <path/to/PI1M.csv> --output_tfrecord <path/to/tfrecord/file>
+mkdir dataset
+python3 create_dataset.py --input_csv <path/to/mol_train.csv> --output_tfrecord dataset/trainset.tfrecord
+python3 create_dataset.py --input_csv <path/to/mol_test.csv> --output_tfrecord dataset/testset.tfrecord
 ```
 
-## train feature extractor
+## train
 
 ```shell
-python3 transfer_learning.py --dataset <path/to/tfrecord/file> --ckpt <path/to/place/ckpt>
+python3 train.py --dataset dataset --ckpt <path/to/place/ckpt>
 ```
+
