@@ -6,25 +6,6 @@
 pip3 install -r requirements.txt
 ```
 
-if version of python is over 3.9 (included), please manually update from collection to collection.abc for the following files
-
-- /home/breadbread1984/envs/tf2/lib/python3.11/site-packages/mordred/tests/test_import_all_descriptors.py:1
-- /home/breadbread1984/envs/tf2/lib/python3.11/site-packages/mordred/tests/test_result_type.py:1
-
-modred has a bug, please manual update /home/breadbread1984/envs/tf2/lib/python3.11/site-packages/mordred/DetourMatrix.py:121 as the following code
-
-```python
-        for bcc in (self.G.subgraph(c) for c in networkx.biconnected_components(self.G)):
-```
-
-verify your environment by executing the following command
-
-```shell
-python3 -m mordred.tests
-```
-
-if no errors occur, you can safely generated mordred descriptors.
-
 ## generate dataset
 
 ### download polymer dataset
