@@ -12,7 +12,7 @@ FLAGS = flags.FLAGS
 def add_options():
   flags.DEFINE_string('dataset', default = None, help = 'path to directory containing tfrecord files')
   flags.DEFINE_string('ckpt', default = 'ckpt', help = 'path to checkpoint')
-  flags.DEFINE_integer('epoch', default = 400, help = 'epoch number')
+  flags.DEFINE_integer('epoch', default = 2, help = 'epoch number')
   flags.DEFINE_integer('channels', default = 256, help = 'output channel of gated graph neural network')
   flags.DEFINE_integer('layers', default = 4, help = 'number of layers in gated graph neural network')
   flags.DEFINE_float('lr', default = 1e-3, help = 'learning rate')
@@ -48,8 +48,8 @@ def main(unused_argv):
       print('Step: #%d epoch: %d loss: %f' % (optimizer.iterations, epoch, train_metric.result()))
       if optimizer.iterations % FLAGS.save_freq == 0:
         checkpoint.save(join(FLAGS.ckpt, 'ckpt'))
-        with log.as_default():
-          tf.summary.scalar('loss', train_metric.result(), step = optimizer.iterations)
+      with log.as_default():
+        tf.summary.scalar('loss', train_metric.result(), step = optimizer.iterations)
     # evaluation
     eval_metric = tf.keras.metrics.BinaryAccuracy()
     eval_iter = iter(testset)
