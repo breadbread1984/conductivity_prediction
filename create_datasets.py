@@ -2,7 +2,6 @@
 
 from absl import flags, app
 from rdkit import Chem
-from mordred import Calculator, descriptors, error
 import tensorflow as tf
 
 FLAGS = flags.FLAGS
@@ -13,7 +12,7 @@ def add_options():
 
 class Dataset(object):
   def __init__(self):
-    self.calc = Calculator(descriptors, ignore_3D = False)
+    pass
   def smiles_to_graph(self, smiles: str):
     molecule = Chem.MolFromSmiles(smiles)
     atom_num = len(molecule.GetAtoms())
