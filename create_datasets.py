@@ -58,12 +58,12 @@ class Dataset(object):
       feature = tf.io.parse_single_example(
         serialized_example,
         features = {
-          'adjacent': tf.io.FixedLenFeature((3), dtype = tf.string),
+          'adjacent': tf.io.FixedLenFeature((1,3), dtype = tf.string),
           'atoms': tf.io.FixedLenFeature((), dtype = tf.string),
           'atom_num': tf.io.FixedLenFeature((), dtype = tf.int64),
           'label': tf.io.FixedLenFeature((), dtype = tf.int64),
         })
-      adjacent = tf.io.deserialize_many_sparse(feature['adjacent'], dtype = tf.float32)
+      adjacent = tf.io.deserialize_many_sparse(feature['adjacent'], dtype = tf.float32)[0]
       atoms = tf.io.parse_tensor(feature['atoms'], out_type = tf.int32)
       atom_num = tf.cast(feature['atom_num'], dtype = tf.int32)
       label = tf.cast(feature['label'], dtype = tf.int32)
