@@ -6,7 +6,7 @@
 pip3 install -r requirements.txt
 ```
 
-if version of python is over 3.9 (included), please manually update from collection to collection.abc for the following files
+if version of python is over 3.9 (included), please manually update from collections to collections.abc for the following files
 
 - /home/breadbread1984/envs/tf2/lib/python3.11/site-packages/mordred/tests/test_import_all_descriptors.py:1
 - /home/breadbread1984/envs/tf2/lib/python3.11/site-packages/mordred/tests/test_result_type.py:1
