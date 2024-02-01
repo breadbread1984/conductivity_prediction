@@ -44,7 +44,7 @@ def main(unused_argv):
         loss = bc(label, pred)
       train_metric.update_state(loss)
       grads = tape.gradient(loss, predictor.trainable_variables)
-      optimizer.apply_gradients(grads, predictor.trainable_variables)
+      optimizer.apply_gradients(zip(grads, predictor.trainable_variables))
       print('Step: #%d epoch: %d loss: %f' % (optimizer.iterations, epoch, train_metric.result()))
       if optimizer.iterations % FLAGS.save_freq == 0:
         checkpoint.save(join(FLAGS.ckpt, 'ckpt'))
