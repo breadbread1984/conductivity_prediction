@@ -53,12 +53,18 @@ def main(unused_argv):
     # evaluation
     eval_metric = tf.keras.metrics.BinaryAccuracy()
     eval_iter = iter(testset)
+    preds = list()
+    gts = list()
     for (adjacent, atoms), label in eval_iter:
       pred = predictor(adjacent, atoms)
-      eval_metric.update_state(label, pred)
-      with log.as_default():
-        tf.summary.scalar('binary accuracy', eval_metric.result(), step = optimizer.iterations)
-      print('Step: #%d epoch: %d accuracy: %f' % (optimizer.iterations, epoch, eval_metric.result()))
+      gts.append(label)
+      preds.append(pred)
+    preds = tf.concat(preds, axis = 0)
+    gts = tf.concat(gts, axis = 0)
+    eval_metric.update_state(gts, preds)
+    with log.as_default():
+      tf.summary.scalar('binary accuracy', eval_metric.result(), step = optimizer.iterations)
+    print('Step: #%d epoch: %d accuracy: %f' % (optimizer.iterations, epoch, eval_metric.result()))
   checkpoint.save(join(FLAGS.ckpt, 'ckpt'))
 
 if __name__ == "__main__":
