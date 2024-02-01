@@ -17,7 +17,7 @@ def add_options():
   flags.DEFINE_integer('layers', default = 4, help = 'number of layers in gated graph neural network')
   flags.DEFINE_float('lr', default = 1e-3, help = 'learning rate')
   flags.DEFINE_integer('decay_steps', default = 7000, help = 'decay steps')
-  flags.DEFINE_integer('save_freq', default = 700, help = 'checkpoint save frequency')
+  flags.DEFINE_integer('save_freq', default = 7000, help = 'checkpoint save frequency')
 
 def main(unused_argv):
   parse_func = Dataset().get_parse_function()
@@ -26,7 +26,7 @@ def main(unused_argv):
 
   optimizer = tf.keras.optimizers.Adam(tf.keras.optimizers.schedules.CosineDecayRestarts(FLAGS.lr, first_decay_steps = FLAGS.decay_steps))
   predictor = Predictor(channels = FLAGS.channels, num_layers = FLAGS.layers)
-  bc = tf.keras.losses.BinaryCrossentropy()
+  bc = tf.keras.losses.BinaryFocalCrossentropy()
 
   if not exists(FLAGS.ckpt): mkdir(FLAGS.ckpt)
   checkpoint = tf.train.Checkpoint(model = predictor, optimizer = optimizer)
