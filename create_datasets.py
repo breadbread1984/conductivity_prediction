@@ -64,7 +64,7 @@ class Dataset(object):
           'label': tf.io.FixedLenFeature((), dtype = tf.int64),
         })
       adjacent = tf.io.deserialize_many_sparse(feature['adjacent'], dtype = tf.float32)
-      adjacent = tf.sparse.reshape(adjacent, (adjacent.shape[1], adjacent.shape[2]))
+      adjacent = tf.sparse.reshape(adjacent, (tf.shape(adjacent)[1], tf.shape(adjacent)[2]))
       atoms = tf.io.parse_tensor(feature['atoms'], out_type = tf.int32)
       atom_num = tf.cast(feature['atom_num'], dtype = tf.int32)
       label = tf.cast(feature['label'], dtype = tf.int32)
