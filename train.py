@@ -12,11 +12,12 @@ FLAGS = flags.FLAGS
 def add_options():
   flags.DEFINE_string('dataset', default = None, help = 'path to directory containing tfrecord files')
   flags.DEFINE_string('ckpt', default = 'ckpt', help = 'path to checkpoint')
-  flags.DEFINE_integer('epoch', default = 20, help = 'epoch number')
+  flags.DEFINE_integer('epoch', default = 200, help = 'epoch number')
   flags.DEFINE_integer('channels', default = 256, help = 'output channel of gated graph neural network')
   flags.DEFINE_integer('layers', default = 4, help = 'number of layers in gated graph neural network')
   flags.DEFINE_float('lr', default = 1e-3, help = 'learning rate')
   flags.DEFINE_integer('decay_steps', default = 7000, help = 'decay steps')
+  flags.DEFINE_float('decay_rate', default = 0.96, help = 'decay rate')
   flags.DEFINE_integer('save_freq', default = 7000, help = 'checkpoint save frequency')
 
 def main(unused_argv):
@@ -24,7 +25,7 @@ def main(unused_argv):
   trainset = tf.data.TFRecordDataset(join(FLAGS.dataset, 'trainset.tfrecord')).map(parse_func).prefetch(10).shuffle(10).batch(1)
   testset = tf.data.TFRecordDataset(join(FLAGS.dataset, 'testset.tfrecord')).map(parse_func).prefetch(10).shuffle(10).batch(1)
 
-  optimizer = tf.keras.optimizers.Adam(tf.keras.optimizers.schedules.CosineDecayRestarts(FLAGS.lr, first_decay_steps = FLAGS.decay_steps))
+  optimizer = tf.keras.optimizers.Adam(tf.keras.optimizers.schedules.ExponentialDecay(FLAGS.lr, decay_steps = FLAGS.decay_steps, decay_rate = 0.96))
   predictor = Predictor(channels = FLAGS.channels, num_layers = FLAGS.layers)
   bc = tf.keras.losses.BinaryFocalCrossentropy()
 
@@ -45,7 +46,7 @@ def main(unused_argv):
       train_metric.update_state(loss)
       grads = tape.gradient(loss, predictor.trainable_variables)
       optimizer.apply_gradients(zip(grads, predictor.trainable_variables))
-      print('Step: #%d epoch: %d loss: %f' % (optimizer.iterations, epoch, train_metric.result()))
+      print('Step: #%d epoch: %d loss: %f lr: %f' % (optimizer.iterations, epoch, train_metric.result(), optimizer.lr))
       if optimizer.iterations % FLAGS.save_freq == 0:
         checkpoint.save(join(FLAGS.ckpt, 'ckpt'))
       with log.as_default():
