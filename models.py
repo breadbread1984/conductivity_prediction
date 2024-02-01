@@ -50,6 +50,16 @@ class FeatureExtractor(tf.keras.Model):
     results = self.pool(results) # results.shape = (batch, 32)
     return results
 
+class Predictor(tf.keras.Model):
+  def __init__(self, channels = 32, num_layers = 4, **kwargs):
+    super(Predictor, self).__init__(**kwargs)
+    self.extractor = FeatureExtractor(channels, num_layers, **kwargs)
+    self.dense = tf.keras.layers.Dense(1, activation = tf.keras.activations.sigmoid)
+  def call(self, adjacent, annotations):
+    results = self.extractor(adjacent, annotations)
+    results = self.dense(results)
+    return results
+
 if __name__ == "__main__":
   adjacent = tf.sparse.expand_dims(tf.sparse.eye(10, 10), axis = 0)
   annotations = tf.random.uniform(minval = 0, maxval = 118, shape = (1,10), dtype = tf.int32)
