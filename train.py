@@ -12,7 +12,7 @@ FLAGS = flags.FLAGS
 def add_options():
   flags.DEFINE_string('dataset', default = None, help = 'path to directory containing tfrecord files')
   flags.DEFINE_string('ckpt', default = 'ckpt', help = 'path to checkpoint')
-  flags.DEFINE_integer('epoch', default = 1, help = 'epoch number')
+  flags.DEFINE_integer('epoch', default = 20, help = 'epoch number')
   flags.DEFINE_integer('channels', default = 256, help = 'output channel of gated graph neural network')
   flags.DEFINE_integer('layers', default = 4, help = 'number of layers in gated graph neural network')
   flags.DEFINE_float('lr', default = 1e-3, help = 'learning rate')
@@ -26,7 +26,7 @@ def main(unused_argv):
 
   optimizer = tf.keras.optimizers.Adam(tf.keras.optimizers.schedules.CosineDecayRestarts(FLAGS.lr, first_decay_steps = FLAGS.decay_steps))
   predictor = Predictor(channels = FLAGS.channels, num_layers = FLAGS.layers)
-  bc = tf.keras.losses.BinaryFocalCrossentropy(apply_class_balancing = True)
+  bc = tf.keras.losses.BinaryFocalCrossentropy()
 
   if not exists(FLAGS.ckpt): mkdir(FLAGS.ckpt)
   checkpoint = tf.train.Checkpoint(model = predictor, optimizer = optimizer)
