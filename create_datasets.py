@@ -44,7 +44,7 @@ class Dataset(object):
       label = int(label)
       trainsample = tf.train.Example(features = tf.train.Features(
         feature = {
-          'adjacent': tf.train.Feature(bytes_list = tf.train.BytesList(value = [tf.io.serialize_sparse(adjacent).numpy()])),
+          'adjacent': tf.train.Feature(bytes_list = tf.train.BytesList(value = tf.io.serialize_sparse(adjacent).numpy())),
           'atoms': tf.train.Feature(bytes_list = tf.train.BytesList(value = [tf.io.serialize_tensor(atoms).numpy()])),
           'atom_num': tf.train.Feature(int64_list = tf.train.Int64List(value = [atoms.shape[0]])),
           'label': tf.train.Feature(int64_list = tf.train.Int64List(value = [label,])),
