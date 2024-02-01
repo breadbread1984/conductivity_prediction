@@ -34,24 +34,20 @@ class Dataset(object):
     adjacent = adjacent / row_sum # normalization
     annotations = tf.cast(tf.stack(annotations), dtype = tf.int32) # annotations.shape = (atom_num)
     return adjacent, annotations
-  def smiles_to_fingerprint(self, smiles: str):
-    molecule = Chem.MolFromSmiles(smiles)
-    feature = self.calc(molecule)
-    feature = tf.constant([f if type(f) is not error.Missing else -1 for f in feature], dtype = tf.float32)
-    return feature
   def generate_dataset(self, csv_file, tfrecord_file):
     writer = tf.io.TFRecordWriter(tfrecord_file)
     csv = open(FLAGS.input_csv, 'r')
     for line, row in enumerate(csv.readlines()):
       if line == 0: continue
-      smiles = row
+      smiles, label = row.split(',')
       adjacent, atoms = self.smiles_to_graph(smiles)
-      fingerprint = self.smiles_to_fingerprint(smiles)
+      label = int(label)
       trainsample = tf.train.Example(features = tf.train.Features(
         feature = {
           'adjacent': tf.train.Feature(bytes_list = tf.train.BytesList(value = tf.io.serialize_sparse(adjacent).numpy())),
           'atoms': tf.train.Feature(bytes_list = tf.train.BytesList(value = [tf.io.serialize_tensor(atoms).numpy()])),
-          'feature': tf.train.Feature(bytes_list = tf.train.BytesList(value = [tf.io.serialize_tensor(fingerprint).numpy()])),
+          'atom_num': tf.train.Feature(int64_list = tf.train.Int64List(value = [atoms.shape[0]])),
+          'label': tf.train.Feature(int64_list = tf.train.Int64List(value = [label,])),
         }
       ))
       writer.write(trainsample.SerializeToString())
@@ -64,12 +60,15 @@ class Dataset(object):
         features = {
           'adjacent': tf.io.FixedLenFeature((), dtype = tf.string),
           'atoms': tf.io.FixedLenFeature((), dtype = tf.string),
-          'feature': tf.io.FixedLenFeature((), dtype = tf.string),
+          'atom_num': tf.io.FixedLenFeature((), dtype = tf.int64),
+          'label': tf.io.FixedLenFeature((), dtype = tf.int64),
         })
       adjacent = tf.io.deserialize_many_sparse(feature['adjacent'], dtype = tf.float32)
       atoms = tf.io.parse_tensor(feature['atoms'], out_type = tf.int32)
-      feature = tf.io.parse_tensor(feature['feature'], out_type = tf.float32)
-      return (adjacent, atoms), feature
+      atom_num = tf.cast(feature['atom_num'], dtype = tf.int32)
+      label = tf.cast(feature['label'], dtype = tf.int32)
+      atoms = tf.reshape(atoms, (atom_num,))
+      return (adjacent, atoms), label
     return parse_function
 
 def main(unused_argv):
