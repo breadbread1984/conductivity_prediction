@@ -36,7 +36,7 @@ def main(unused_argv):
 
   for epoch in range(FLAGS.epoch):
     # train
-    train_metric = tf.kera.metrics.Mean(name = 'loss')
+    train_metric = tf.keras.metrics.Mean(name = 'loss')
     train_iter = iter(trainset)
     for (adjacent, atoms), label in train_iter:
       with tf.GradientTape() as tape:
