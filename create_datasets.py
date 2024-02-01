@@ -58,7 +58,7 @@ class Dataset(object):
       feature = tf.io.parse_single_example(
         serialized_example,
         features = {
-          'adjacent': tf.io.FixedLenFeature((), dtype = tf.string),
+          'adjacent': tf.io.FixedLenFeature((1,3), dtype = tf.string),
           'atoms': tf.io.FixedLenFeature((), dtype = tf.string),
           'atom_num': tf.io.FixedLenFeature((), dtype = tf.int64),
           'label': tf.io.FixedLenFeature((), dtype = tf.int64),

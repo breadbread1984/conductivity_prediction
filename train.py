@@ -25,7 +25,7 @@ def main(unused_argv):
   testset = tf.data.TFRecordDataset(join(FLAGS.dataset, 'testset.tfrecord')).map(parse_func).prefetch(10).shuffle(10).batch(1)
 
   optimizer = tf.keras.optimizers.Adam(tf.keras.optimizers.schedules.CosineDecayRestarts(FLAGS.lr, first_decay_steps = FLAGS.decay_steps))
-  predictor = Predictor(channels = FLAGS.channels, num_layers = FLAGS.layer)
+  predictor = Predictor(channels = FLAGS.channels, num_layers = FLAGS.layers)
   bc = tf.keras.losses.BinaryCrossentropy()
 
   if not exists(FLAGS.ckpt): mkdir(FLAGS.ckpt)
