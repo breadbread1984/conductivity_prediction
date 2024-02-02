@@ -54,7 +54,7 @@ class Predictor(tf.keras.Model):
   def __init__(self, channels = 32, num_layers = 4, **kwargs):
     super(Predictor, self).__init__(**kwargs)
     self.extractor = FeatureExtractor(channels, num_layers, **kwargs)
-    self.dense = tf.keras.layers.Dense(1, activation = tf.keras.activations.sigmoid)
+    self.dense = tf.keras.layers.Dense(1)
   def call(self, adjacent, annotations):
     results = self.extractor(adjacent, annotations)
     results = self.dense(results)

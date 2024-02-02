@@ -27,7 +27,7 @@ def main(unused_argv):
 
   optimizer = tf.keras.optimizers.Adam(tf.keras.optimizers.schedules.ExponentialDecay(FLAGS.lr, decay_steps = FLAGS.decay_steps, decay_rate = 0.96))
   predictor = Predictor(channels = FLAGS.channels, num_layers = FLAGS.layers)
-  bc = tf.keras.losses.BinaryFocalCrossentropy()
+  mae = tf.keras.losses.MeanAbsoluteError()
 
   if not exists(FLAGS.ckpt): mkdir(FLAGS.ckpt)
   checkpoint = tf.train.Checkpoint(model = predictor, optimizer = optimizer)
@@ -42,7 +42,7 @@ def main(unused_argv):
     for (adjacent, atoms), label in train_iter:
       with tf.GradientTape() as tape:
         pred = predictor(adjacent, atoms)
-        loss = bc(label, pred)
+        loss = mae(label, pred)
       train_metric.update_state(loss)
       grads = tape.gradient(loss, predictor.trainable_variables)
       optimizer.apply_gradients(zip(grads, predictor.trainable_variables))
@@ -52,7 +52,7 @@ def main(unused_argv):
       with log.as_default():
         tf.summary.scalar('loss', train_metric.result(), step = optimizer.iterations)
     # evaluation
-    eval_metric = tf.keras.metrics.BinaryAccuracy()
+    eval_metric = tf.keras.metrics.MeanAbsoluteError()
     eval_iter = iter(testset)
     preds = list()
     gts = list()
@@ -64,8 +64,8 @@ def main(unused_argv):
     gts = tf.concat(gts, axis = 0)
     eval_metric.update_state(gts, preds)
     with log.as_default():
-      tf.summary.scalar('binary accuracy', eval_metric.result(), step = optimizer.iterations)
-    print('Step: #%d epoch: %d accuracy: %f' % (optimizer.iterations, epoch, eval_metric.result()))
+      tf.summary.scalar('mae', eval_metric.result(), step = optimizer.iterations)
+    print('Step: #%d epoch: %d mae: %f' % (optimizer.iterations, epoch, eval_metric.result()))
   checkpoint.save(join(FLAGS.ckpt, 'ckpt'))
 
 if __name__ == "__main__":
