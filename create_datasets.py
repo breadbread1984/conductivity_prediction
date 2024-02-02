@@ -76,7 +76,7 @@ class Dataset(object):
           'adjacent': tf.io.FixedLenFeature((1,3), dtype = tf.string),
           'atoms': tf.io.FixedLenFeature((), dtype = tf.string),
           'atom_num': tf.io.FixedLenFeature((), dtype = tf.int64),
-          'label': tf.io.FixedLenFeature((), dtype = tf.float64),
+          'label': tf.io.FixedLenFeature((), dtype = tf.float32),
         })
       adjacent = tf.io.deserialize_many_sparse(feature['adjacent'], dtype = tf.float32)
       adjacent = tf.sparse.reshape(adjacent, (tf.shape(adjacent)[1], tf.shape(adjacent)[2]))
