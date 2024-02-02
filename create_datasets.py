@@ -46,7 +46,7 @@ class Dataset(object):
       if line == 0: continue
       smiles, label = row.split(',')
       samples.append((smiles, label))
-    is_train = np.random.multinomial(1, [9/10,1/10], size = len(samples))[:,0].astype(np.bool)
+    is_train = np.random.multinomial(1, [9/10,1/10], size = len(samples))[:,0].astype(np.bool_)
     samples = np.array(samples)
     trainset = samples[is_train].tolist()
     valset = samples[is_train].tolist()
