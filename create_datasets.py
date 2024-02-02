@@ -1,7 +1,9 @@
 #!/usr/bin/python3
 
 from absl import flags, app
-from os.path import join
+from shutil import rmtree
+from os import mkdir
+from os.path import join, exists
 from rdkit import Chem
 import numpy as np
 import tensorflow as tf
@@ -36,6 +38,8 @@ class Dataset(object):
     annotations = tf.cast(tf.stack(annotations), dtype = tf.int32) # annotations.shape = (atom_num)
     return adjacent, annotations
   def generate_dataset(self, csv_file, output_dir):
+    if exists(output_dir): rmtree(output_dir)
+    mkdir(output_dir)
     samples = list()
     csv = open(csv_file, 'r')
     for line, row in enumerate(csv.readlines()):
