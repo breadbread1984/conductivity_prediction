@@ -16,8 +16,7 @@ download the dataset from [bohrium](https://dataset-bohr-storage.dp.tech/lbg%2Fd
 
 ```shell
 mkdir dataset
-python3 create_dataset.py --input_csv <path/to/mol_train.csv> --output_tfrecord dataset/trainset.tfrecord
-python3 create_dataset.py --input_csv <path/to/mol_test.csv> --output_tfrecord dataset/testset.tfrecord
+python3 create_dataset.py --input_csv <path/to/dataset.csv> --output_dir dataset
 ```
 
 ## train
