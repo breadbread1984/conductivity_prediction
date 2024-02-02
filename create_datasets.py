@@ -49,7 +49,7 @@ class Dataset(object):
     is_train = np.random.multinomial(1, [9/10,1/10], size = len(samples))[:,0].astype(np.bool_)
     samples = np.array(samples)
     trainset = samples[is_train].tolist()
-    valset = samples[is_train].tolist()
+    valset = samples[np.logical_not(is_train)].tolist()
     self.generate_tfrecord(trainset, join(output_dir, 'trainset.tfrecord'))
     self.generate_tfrecord(valset, join(output_dir, 'testset.tfrecord'))
     csv.close()
