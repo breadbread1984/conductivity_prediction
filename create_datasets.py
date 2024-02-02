@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 from absl import flags, app
+from os.path import join
 from rdkit import Chem
 import numpy as np
 import tensorflow as tf
