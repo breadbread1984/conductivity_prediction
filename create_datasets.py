@@ -52,6 +52,7 @@ class Dataset(object):
     valset = samples[is_train].tolist()
     self.generate_tfrecord(trainset, join(output_dir, 'trainset.tfrecord'))
     self.generate_tfrecord(valset, join(output_dir, 'testset.tfrecord'))
+    csv.close()
   def generate_tfrecord(self, samples, tfrecord_file):
     writer = tf.io.TFRecordWriter(tfrecord_file)
     for line, (smiles, label) in enumerate(samples):
@@ -66,7 +67,6 @@ class Dataset(object):
         }
       ))
       writer.write(trainsample.SerializeToString())
-    csv.close()
     writer.close()
   def get_parse_function(self,):
     def parse_function(serialized_example):
