@@ -17,7 +17,7 @@ def add_options():
   flags.DEFINE_integer('layers', default = 4, help = 'number of layers in gated graph neural network')
   flags.DEFINE_float('lr', default = 1e-3, help = 'learning rate')
   flags.DEFINE_integer('decay_steps', default = 100000, help = 'decay steps')
-  flags.DEFINE_integer('save_freq', default = 7000, help = 'checkpoint save frequency')
+  flags.DEFINE_integer('save_freq', default = 100000, help = 'checkpoint save frequency')
 
 def main(unused_argv):
   parse_func = Dataset().get_parse_function()
