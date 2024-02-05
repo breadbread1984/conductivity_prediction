@@ -1,6 +1,9 @@
 #!/usr/bin/python3
 
 from absl import flags, app
+from shutil import rmtree
+from os import mkdir
+from os.path import join, exists
 from rdkit import Chem
 import numpy as np
 import tensorflow as tf
@@ -35,18 +38,21 @@ class Dataset(object):
     annotations = tf.cast(tf.stack(annotations), dtype = tf.int32) # annotations.shape = (atom_num)
     return adjacent, annotations
   def generate_dataset(self, csv_file, output_dir):
+    if exists(output_dir): rmtree(output_dir)
+    mkdir(output_dir)
     samples = list()
     csv = open(csv_file, 'r')
     for line, row in enumerate(csv.readlines()):
       if line == 0: continue
       smiles, label = row.split(',')
       samples.append((smiles, label))
-    is_train = np.random.multinomial(1, [9/10,1/10], len(samples))[:,0].astype(np.bool)
+    is_train = np.random.multinomial(1, [9/10,1/10], size = len(samples))[:,0].astype(np.bool_)
     samples = np.array(samples)
     trainset = samples[is_train].tolist()
-    valset = samples[is_train].tolist()
+    valset = samples[np.logical_not(is_train)].tolist()
     self.generate_tfrecord(trainset, join(output_dir, 'trainset.tfrecord'))
     self.generate_tfrecord(valset, join(output_dir, 'testset.tfrecord'))
+    csv.close()
   def generate_tfrecord(self, samples, tfrecord_file):
     writer = tf.io.TFRecordWriter(tfrecord_file)
     for line, (smiles, label) in enumerate(samples):
@@ -57,11 +63,10 @@ class Dataset(object):
           'adjacent': tf.train.Feature(bytes_list = tf.train.BytesList(value = tf.io.serialize_sparse(adjacent).numpy())),
           'atoms': tf.train.Feature(bytes_list = tf.train.BytesList(value = [tf.io.serialize_tensor(atoms).numpy()])),
           'atom_num': tf.train.Feature(int64_list = tf.train.Int64List(value = [atoms.shape[0]])),
-          'label': tf.train.Feature(int64_list = tf.train.FloatList(value = [label,])),
+          'label': tf.train.Feature(float_list = tf.train.FloatList(value = [label,])),
         }
       ))
       writer.write(trainsample.SerializeToString())
-    csv.close()
     writer.close()
   def get_parse_function(self,):
     def parse_function(serialized_example):
@@ -71,7 +76,7 @@ class Dataset(object):
           'adjacent': tf.io.FixedLenFeature((1,3), dtype = tf.string),
           'atoms': tf.io.FixedLenFeature((), dtype = tf.string),
           'atom_num': tf.io.FixedLenFeature((), dtype = tf.int64),
-          'label': tf.io.FixedLenFeature((), dtype = tf.float64),
+          'label': tf.io.FixedLenFeature((), dtype = tf.float32),
         })
       adjacent = tf.io.deserialize_many_sparse(feature['adjacent'], dtype = tf.float32)
       adjacent = tf.sparse.reshape(adjacent, (tf.shape(adjacent)[1], tf.shape(adjacent)[2]))

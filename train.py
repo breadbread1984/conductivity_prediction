@@ -16,16 +16,15 @@ def add_options():
   flags.DEFINE_integer('channels', default = 256, help = 'output channel of gated graph neural network')
   flags.DEFINE_integer('layers', default = 4, help = 'number of layers in gated graph neural network')
   flags.DEFINE_float('lr', default = 1e-3, help = 'learning rate')
-  flags.DEFINE_integer('decay_steps', default = 7000, help = 'decay steps')
-  flags.DEFINE_float('decay_rate', default = 0.96, help = 'decay rate')
-  flags.DEFINE_integer('save_freq', default = 7000, help = 'checkpoint save frequency')
+  flags.DEFINE_integer('decay_steps', default = 100000, help = 'decay steps')
+  flags.DEFINE_integer('save_freq', default = 100000, help = 'checkpoint save frequency')
 
 def main(unused_argv):
   parse_func = Dataset().get_parse_function()
   trainset = tf.data.TFRecordDataset(join(FLAGS.dataset, 'trainset.tfrecord')).map(parse_func).prefetch(10).shuffle(10).batch(1)
   testset = tf.data.TFRecordDataset(join(FLAGS.dataset, 'testset.tfrecord')).map(parse_func).prefetch(10).shuffle(10).batch(1)
 
-  optimizer = tf.keras.optimizers.Adam(tf.keras.optimizers.schedules.ExponentialDecay(FLAGS.lr, decay_steps = FLAGS.decay_steps, decay_rate = 0.96))
+  optimizer = tf.keras.optimizers.Adam(tf.keras.optimizers.schedules.CosineDecayRestarts(FLAGS.lr, first_decay_steps = FLAGS.decay_steps))
   predictor = Predictor(channels = FLAGS.channels, num_layers = FLAGS.layers)
   mae = tf.keras.losses.MeanAbsoluteError()
 
