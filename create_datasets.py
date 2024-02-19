@@ -65,7 +65,8 @@ class Dataset(object):
       )
     )
     return graph
-  def graph_tensor_spec(self,):
+  @staticmethod
+  def graph_tensor_spec():
     spec = tfgnn.GraphTensorSpec.from_piece_specs(
       node_sets_spec = {
         "atom": tfgnn.NodeSetSpec.from_field_specs(

@@ -1,64 +1,57 @@
 #!/bin/bash
 
 import tensorflow as tf
+import tensorflow_gnn as tfgnn
+from create_dataset import Dataset
 
-class GraphConvolution(tf.keras.layers.Layer):
-  def __init__(self, **kwargs):
-    super(GraphConvolution, self).__init__(**kwargs)
-  def build(self, input_shape):
-    self.bias = self.add_weight(name = 'bias', shape = (1,1,input_shape[1][-1]), initializer = tf.keras.initializers.GlorotUniform(), trainable = True)
-  def call(self, inputs):
-    # adjacent.shape = (batch, atom_num, atom_num)
-    # annotations.shape = (batch, atom_num, in_channel)
-    adjacent, annotations = inputs
-    results = list()
-    # NOTE: sparse_dense_matmul doesn't support matrix with batch dimension
-    for i in range(tf.shape(adjacent)[0]):
-      adj = tf.sparse.slice(adjacent, [i,0,0], [1,tf.shape(adjacent)[1],tf.shape(adjacent)[2]])
-      adj = tf.sparse.reshape(adj, [tf.shape(adjacent)[1], tf.shape(adjacent)[2]])
-      results.append(tf.sparse.sparse_dense_matmul(adj, annotations[i])) # results.shape = (batch, atom_num, in_channel)
-    results = tf.stack(results, axis = 0)
-    results = results + self.bias
-    return results
-
-class GatedGraphConvolution(tf.keras.Model):
-  def __init__(self, channels, **kwargs):
-    super(GatedGraphConvolution, self).__init__(**kwargs)
-    self.gc = GraphConvolution()
-    self.gru = tf.keras.layers.GRU(channels)
+class GatedGraphConvolution(tf.keras.layers.GRU):
+  def __init__(self, channels):
+    super(GatedGraphConvolution, self).__init__(channels)
     self.channels = channels
-  def call(self, adjacent, annotations):
-    results = self.gc([adjacent, annotations]) # results.shape = (batch, atom_num, channels)
-    shape = tf.shape(results)
-    hidden_states = tf.reshape(annotations, (-1, self.channels)) # hidden_states.shape = (batch * atom_num, channels)
-    visible_states = tf.reshape(results, (-1, 1, self.channels)) # visible_states.shape = (batch * atom_num, 1, channels)
-    results = self.gru(visible_states, initial_state = hidden_states) # results.shape = (batch * atom_num, channels)
-    results = tf.reshape(results, shape) # results.shape = (batch, atom_num, channels)
+  def build(self, input_shape):
+    self.bias = self.add_weight(name = 'bias', shape = (1, self.channels), initializer = tf.keras.initializers.GlorotUniform(), trainable = True)
+  def call(self, inputs):
+    node_features, incident_node_features, context_features = inputs
+    # NOTE: node_features.shape = (node_num, channels)
+    # NOTE: incident_node_features.shape = (node_num, channels)
+    shape = tf.shape(incident_node_features)
+    hidden_states = tf.reshape(node_features, (-1, 1, channels))
+    visible_states = tf.reshape(incident_node_features + self.bias, (-1, 1, channels))
+    results = super(GatedGraphConvolution, self).call(visible_states, initial_state = hidden_state)
+    results = tf.reshape(results, shape)
     return results
+  def get_config(self):
+    config = super(GatedGraphConvolution, self).get_config()
+    config['channels'] = self.channels
+    return config
+  @classmethod
+  def from_config(cls, config):
+    return cls(**config)
 
-class FeatureExtractor(tf.keras.Model):
-  def __init__(self, channels = 32, num_layers = 4, **kwargs):
-    super(FeatureExtractor, self).__init__(**kwargs)
-    self.embed = tf.keras.layers.Embedding(118, channels)
-    self.ggnns = [GatedGraphConvolution(channels) for i in range(num_layers)]
-    self.pool = tf.keras.layers.Lambda(lambda x: tf.math.reduce_mean(x, axis = 1))
-  def call(self, adjacent, annotations):
-    results = self.embed(annotations) # results.shape = (batch, atom_num, 32)
-    for ggnn in self.ggnns:
-      results = ggnn(adjacent, results)
-    # graph pooling
-    results = self.pool(results) # results.shape = (batch, 32)
-    return results
-
-class Predictor(tf.keras.Model):
-  def __init__(self, channels = 32, num_layers = 4, **kwargs):
-    super(Predictor, self).__init__(**kwargs)
-    self.extractor = FeatureExtractor(channels, num_layers, **kwargs)
-    self.dense = tf.keras.layers.Dense(1)
-  def call(self, adjacent, annotations):
-    results = self.extractor(adjacent, annotations)
-    results = self.dense(results)
-    return results
+def GatedGraphNeuralNetwork(channels = 256, layer_num = 4):
+  graph = tf.keras.Input(type_spec = Dataset.graph_tensor_spec())
+  graph = graph.merge_batch_to_components()
+  graph = tfgnn.keras.layers.MapFeatures(
+    node_sets_fn = lambda node_set, *, node_set_name: tf.keras.layers.Dense(channels)(node_set[tfgnn.HIDDEN_STATE]))(graph)
+  for i in range(layer_num):
+    graph = tfgnn.keras.layers.GraphUpdate(
+      node_sets = {
+        "atom": tfgnn.keras.layers.NodeSetUpdate(
+          node_input_feature = tfgnn.HIDDEN_STATE,
+          edge_set_inputs = {
+            "bond": tfgnn.keras.layers.SimpleConv(
+              message_fn = tf.keras.layers.Identity(),
+              reduce_type = "mean",
+              receiver_tag = tfgnn.TARGET
+            )
+          },
+          next_state = GatedGraphConvolution(channels)
+        )
+      }
+    )
+  results = tfgnn.keras.layers.Pool(tag = tfgnn.CONTEXT, reduce_type = 'mean', node_set_name = "atom")(graph)
+  results = tf.keras.layers.Dense(1)(results)
+  return tf.keras.Model(inputs = graph, outputs = results)
 
 if __name__ == "__main__":
   adjacent = tf.sparse.expand_dims(tf.sparse.eye(10, 10), axis = 0)
