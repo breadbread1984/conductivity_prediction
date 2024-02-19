@@ -32,7 +32,7 @@ def GatedGraphNeuralNetwork(channels = 256, layer_num = 4):
   graph = tf.keras.Input(type_spec = Dataset.graph_tensor_spec())
   graph = graph.merge_batch_to_components()
   graph = tfgnn.keras.layers.MapFeatures(
-    node_sets_fn = lambda node_set, *, node_set_name: tf.keras.layers.Dense(channels)(node_set[tfgnn.HIDDEN_STATE]))(graph)
+    node_sets_fn = lambda node_set, *, node_set_name: {tfgnn.HIDDEN_STATE: tf.keras.layers.Dense(channels)(node_set[tfgnn.HIDDEN_STATE])})(graph)
   for i in range(layer_num):
     graph = tfgnn.keras.layers.GraphUpdate(
       node_sets = {
