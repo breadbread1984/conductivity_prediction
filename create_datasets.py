@@ -81,7 +81,8 @@ class Dataset(object):
           features_spec = {
             tfgnn.HIDDEN_STATE: tf.TensorSpec((None, 22), tf.float32)
           },
-          sizes_spec = tf.TensorSpec((1,), tf.int32)
+          sizes_spec = tf.TensorSpec((1,), tf.int32),
+          adjacency_spec = tfgnn.AdjacencySpec.from_incident_node_sets("atom", "atom")
         )
       },
       context_spec = tfgnn.ContextSpec.from_field_specs(
