@@ -5,3 +5,5 @@ numpy==1.23.5
 nose-py3
 pandas
 pyyaml
+tensorflow
+tensorflow_gnn
