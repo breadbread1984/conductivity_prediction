@@ -29,8 +29,8 @@ class GatedGraphConvolution(tf.keras.layers.GRU):
     return cls(**config)
 
 def GatedGraphNeuralNetwork(channels = 256, layer_num = 4):
-  graph = tf.keras.Input(type_spec = Dataset.graph_tensor_spec())
-  graph = graph.merge_batch_to_components()
+  inputs = tf.keras.Input(type_spec = Dataset.graph_tensor_spec())
+  graph = inputs.merge_batch_to_components()
   graph = tfgnn.keras.layers.MapFeatures(
     node_sets_fn = lambda node_set, *, node_set_name: {tfgnn.HIDDEN_STATE: tf.keras.layers.Dense(channels)(node_set[tfgnn.HIDDEN_STATE])})(graph)
   for i in range(layer_num):
@@ -51,7 +51,7 @@ def GatedGraphNeuralNetwork(channels = 256, layer_num = 4):
     )
   results = tfgnn.keras.layers.Pool(tag = tfgnn.CONTEXT, reduce_type = 'mean', node_set_name = "atom")(graph)
   results = tf.keras.layers.Dense(1)(results)
-  return tf.keras.Model(inputs = graph, outputs = results)
+  return tf.keras.Model(inputs = inputs, outputs = results)
 
 if __name__ == "__main__":
   adjacent = tf.sparse.expand_dims(tf.sparse.eye(10, 10), axis = 0)
